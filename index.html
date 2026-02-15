@@ -1,0 +1,1432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mac OS X</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon_io/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon_io/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon_io/favicon-16x16.png">
+    <link rel="manifest" href="favicon_io/site.webmanifest">
+    <style>
+        /* Pixel Chicago font */
+        @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+        
+        @font-face {
+            font-family: 'ChicagoFLF';
+            src: url('https://cdn.jsdelivr.net/gh/nicholasRutworworworworworworworwor/ChicagoFLF@master/ChicagoFLF.woff2') format('woff2');
+            font-weight: normal;
+            font-style: normal;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            image-rendering: pixelated;
+            -webkit-font-smoothing: none;
+            -moz-osx-font-smoothing: none;
+            font-family: 'ChicagoFLF', 'VT323', monospace;
+            font-size: 12px;
+        }
+        
+        body {
+            min-height: 100vh;
+            background: #5f5f8f;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            font-family: 'Geneva', 'Helvetica', monospace;
+            overflow: hidden;
+            cursor: url('cursor.png'), auto;
+        }
+        
+
+        /* Classic Mac Window */
+        .mac-window {
+            background: #ffffff;
+            border: 2px solid #000000;
+            box-shadow: 2px 2px 0 #000;
+            max-width: 650px;
+            width: 100%;
+            z-index: 100;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        /* Draggable window styles */
+        .mac-window.draggable {
+            position: absolute;
+            transform: none;
+        }
+        
+        .mac-window .title-bar {
+            cursor: grab;
+        }
+        
+        .mac-window .title-bar:active {
+            cursor: grabbing;
+        }
+        
+        .title-bar {
+            background: #ffffff;
+            border-bottom: 2px solid #000;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            height: 20px;
+            position: relative;
+        }
+        
+        /* Classic Mac striped title bar pattern */
+        .title-bar::before {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 24px;
+            right: 24px;
+            bottom: 2px;
+            background: repeating-linear-gradient(
+                0deg,
+                #000 0px,
+                #000 1px,
+                #fff 1px,
+                #fff 3px
+            );
+        }
+        
+        .close-box {
+            width: 13px;
+            height: 11px;
+            border: 1px solid #000;
+            background: #fff;
+            margin-left: 5px;
+            cursor: pointer;
+            z-index: 1;
+            position: relative;
+        }
+        
+        .close-box:active {
+            background: #000;
+        }
+        
+        .title-bar-text {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #fff;
+            padding: 0 8px;
+            font-family: 'ChicagoFLF', 'VT323', monospace;
+            font-size: 12px;
+            font-weight: normal;
+            z-index: 1;
+            white-space: nowrap;
+        }
+        
+        .window-content {
+            padding: 15px;
+            background: #ffffff;
+        }
+        
+        /* Paint app specific styles */
+        .paint-app {
+            padding: 0;
+        }
+        
+        .paint-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 10px;
+            background: #fff;
+            border-bottom: 1px solid #000;
+        }
+        
+        .color-palette {
+            display: flex;
+            gap: 2px;
+            flex-wrap: wrap;
+            max-width: 200px;
+        }
+        
+        .color-swatch {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            border: 2px solid #888;
+        }
+        
+        .color-swatch:hover {
+            border-color: #000;
+        }
+        
+        .color-swatch.active {
+            border-color: #000;
+            box-shadow: 0 0 0 2px #fff, 0 0 0 4px #000;
+        }
+        
+        .paint-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .canvas-container {
+            background: #fff;
+            border: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        #drawCanvas {
+            display: block;
+            width: 100%;
+            cursor: crosshair;
+            background: #fff;
+            image-rendering: auto;
+            border: none;
+            border-top: 1px solid #ccc;
+        }
+        
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        /* Classic Mac button style */
+        .mac-button {
+            font-family: 'ChicagoFLF', 'VT323', monospace;
+            font-size: 12px;
+            padding: 6px 20px;
+            background: linear-gradient(180deg, #fff 0%, #ddd 100%);
+            border: 1px solid #000;
+            border-radius: 4px;
+            cursor: url('cursor.png'), pointer;
+            color: #000;
+            position: relative;
+            min-height: 22px;
+            box-shadow: 
+                inset 1px 1px 0 #fff,
+                inset -1px -1px 0 #888,
+                1px 1px 0 #000;
+        }
+        
+        .mac-button:active {
+            background: linear-gradient(180deg, #aaa 0%, #ccc 100%);
+            box-shadow: 
+                inset -1px -1px 0 #fff,
+                inset 1px 1px 0 #888;
+        }
+        
+        /* Hidden class for windows */
+        .hidden {
+            display: none !important;
+        }
+        
+        /* Primary button with thick border */
+        .mac-button.primary {
+            font-family: 'ChicagoFLF', 'VT323', monospace;
+            border: 2px solid #000;
+            font-weight: bold;
+            padding: 6px 24px;
+            background: linear-gradient(180deg, #fff 0%, #ddd 100%);
+            border-radius: 6px;
+            box-shadow: 
+                inset 1px 1px 0 #fff,
+                inset -1px -1px 0 #888,
+                2px 2px 0 #000;
+        }
+        
+        .mac-button.primary:active {
+            background: linear-gradient(180deg, #aaa 0%, #ccc 100%);
+            box-shadow: 
+                inset -1px -1px 0 #fff,
+                inset 1px 1px 0 #888;
+        }
+        
+        /* Success popup window */
+        .success-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            z-index: 200;
+        }
+        
+        .success-overlay.visible {
+            display: block;
+        }
+        
+        .popup-window {
+            background: #fff;
+            border: 2px solid #000;
+            box-shadow: 2px 2px 0 #000;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-30%, -30%);
+            min-width: 350px;
+        }
+        
+        .popup-window .title-bar {
+            background: #fff;
+            border-bottom: 2px solid #000;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            height: 20px;
+            position: relative;
+        }
+        
+        .popup-window .title-bar::before {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 24px;
+            right: 24px;
+            bottom: 2px;
+            background: repeating-linear-gradient(
+                0deg,
+                #000 0px,
+                #000 1px,
+                #fff 1px,
+                #fff 3px
+            );
+        }
+        
+        .popup-window .close-box {
+            width: 13px;
+            height: 11px;
+            border: 1px solid #000;
+            background: #fff;
+            margin-left: 5px;
+            cursor: url('cursor.png'), pointer;
+            z-index: 1;
+            position: relative;
+        }
+        
+        .popup-window .close-box:active {
+            background: #000;
+        }
+        
+        .popup-window .title-bar-text {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #fff;
+            padding: 0 8px;
+            font-family: 'ChicagoFLF', 'VT323', monospace;
+            font-size: 12px;
+            font-weight: normal;
+            z-index: 1;
+            white-space: nowrap;
+        }
+        
+        .popup-content {
+            padding: 20px;
+            text-align: center;
+            background: #fff;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .result-image {
+            max-width: 200px;
+            max-height: 200px;
+            object-fit: contain;
+            image-rendering: pixelated;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .success-text {
+            font-family: 'ChicagoFLF', 'VT323', monospace;
+            font-size: 11px;
+            color: #000;
+            text-align: left;
+            margin-top: 15px;
+            padding: 10px;
+            background: #f0f0f0;
+            border: 1px solid #000;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Falling heart images */
+        .falling-heart {
+            position: fixed;
+            width: 24px;
+            height: 24px;
+            animation: heartFall linear infinite;
+            z-index: 0;
+            image-rendering: pixelated;
+            pointer-events: none;
+        }
+        
+        @keyframes heartFall {
+            0% {
+                transform: translateY(-50px);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh);
+                opacity: 0.8;
+            }
+        }
+        
+        /* Click anywhere overlay */
+        .click-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            z-index: 150;
+            cursor: pointer;
+        }
+        
+        .click-overlay.visible {
+            display: block;
+        }
+        
+        .confetti {
+            position: fixed;
+            width: 8px;
+            height: 8px;
+            background: #ff69b4;
+            animation: confettiFall 3s linear infinite;
+        }
+        
+        @keyframes confettiFall {
+            0% {
+                transform: translateY(-100vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+        
+        /* Progress bar - Mac style */
+        .progress-container {
+            display: none;
+            margin-top: 15px;
+        }
+        
+        .progress-container.visible {
+            display: block;
+        }
+        
+        .progress-bar {
+            background: #fff;
+            border: 1px solid #000;
+            height: 16px;
+            padding: 2px;
+            border-radius: 8px;
+        }
+        
+        .progress-fill {
+            background: repeating-linear-gradient(
+                -45deg,
+                #ff1493,
+                #ff1493 4px,
+                #ffb6c1 4px,
+                #ffb6c1 8px
+            );
+            height: 100%;
+            width: 0%;
+            border-radius: 6px;
+            transition: width 0.1s;
+        }
+        
+        .progress-text {
+            text-align: center;
+            margin-top: 6px;
+            font-size: 12px;
+            color: #000;
+            font-family: 'ChicagoFLF', 'VT323', monospace;
+        }
+        
+        /* Sparkle cursor effect */
+        .sparkle {
+            position: fixed;
+            pointer-events: none;
+            font-size: 16px;
+            animation: sparkleAnim 0.8s forwards;
+            z-index: 1000;
+        }
+        
+        @keyframes sparkleAnim {
+            0% {
+                transform: scale(0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1.5) rotate(180deg);
+                opacity: 0;
+            }
+        }
+        
+        /* Menu bar at top */
+        .menu-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 20px;
+            background: #fff;
+            border-bottom: 1px solid #000;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            z-index: 1000;
+            font-family: 'ChicagoFLF', 'VT323', monospace;
+            font-size: 12px;
+        }
+        
+        .macos-logo {
+            height: 16px;
+            margin-right: 15px;
+            image-rendering: pixelated;
+        }
+        
+        .menu-bar .apple-logo {
+            font-weight: bold;
+            margin-right: 20px;
+        }
+        
+        .menu-bar span {
+            margin-right: 8px;
+            cursor: default;
+            padding: 2px 8px;
+            border-radius: 0;
+        }
+        
+        .menu-bar span:hover {
+            background: #000;
+            color: #fff;
+        }
+        
+        /* Adjust body for menu bar */
+        body {
+            padding-top: 30px;
+        }
+        
+        /* BSOD overlay */
+        .bsod-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0000aa;
+            z-index: 9999;
+            cursor: pointer;
+        }
+        
+        .bsod-overlay.visible {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .bsod-content {
+            font-family: 'ChicagoFLF', 'VT323', monospace;
+            color: #fff;
+            text-align: center;
+            max-width: 600px;
+            padding: 20px;
+        }
+        
+        .bsod-title {
+            background: #aaa;
+            color: #0000aa;
+            padding: 2px 10px;
+            display: inline-block;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .bsod-text {
+            font-size: 14px;
+            line-height: 1.8;
+            text-align: left;
+            white-space: pre-line;
+        }
+        
+        .bsod-prompt {
+            margin-top: 40px;
+            font-size: 14px;
+            animation: bsodBlink 1s infinite;
+        }
+        
+        @keyframes bsodBlink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+            color: #fff;
+        }
+        
+        /* About This Computer window */
+        .about-window {
+            position: fixed;
+            top: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #c0c0c0;
+            border: 2px solid #000;
+            box-shadow: 2px 2px 0 #000;
+            z-index: 2000;
+            width: 400px;
+        }
+        
+        .about-window.hidden {
+            display: none;
+        }
+        
+        .about-window .title-bar {
+            cursor: grab;
+            background: linear-gradient(90deg, #000080 0%, #1084d0 100%);
+        }
+        
+        .about-window .title-bar .title-bar-text {
+            color: #fff;
+            background: transparent;
+        }
+        
+        .about-window .title-bar:active {
+            cursor: grabbing;
+        }
+        
+        .about-content {
+            padding: 15px;
+            text-align: center;
+            background: #c0c0c0;
+        }
+        
+        .about-logo {
+            font-family: 'ChicagoFLF', 'VT323', monospace;
+            font-size: 28px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .about-logo .macos-logo-large {
+            height: 48px;
+            image-rendering: pixelated;
+        }
+        
+        .about-specs {
+            font-family: 'ChicagoFLF', 'VT323', monospace;
+            font-size: 11px;
+            text-align: left;
+            margin-top: 15px;
+            line-height: 1.6;
+        }
+        
+        .about-specs-row {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #ccc;
+            padding: 3px 0;
+        }
+        
+        .about-specs-label {
+            font-weight: bold;
+        }
+        
+        /* Desktop Icons */
+        .desktop-icons {
+            position: fixed;
+            top: 30px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 50;
+        }
+        
+        .desktop-icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: url('cursor.png'), pointer;
+            padding: 4px;
+            border: 1px solid transparent;
+            width: 80px;
+        }
+        
+        .desktop-icon:hover {
+            background: rgba(0, 0, 128, 0.3);
+            border: 1px dotted #000;
+        }
+        
+        .desktop-icon.selected {
+            background: #000080;
+        }
+        
+        .desktop-icon.selected .icon-label {
+            background: #000080;
+            color: #fff;
+        }
+        
+        .icon-folder {
+            width: 48px;
+            height: 40px;
+            position: relative;
+            image-rendering: pixelated;
+        }
+        
+        /* Pixel art folder */
+        .pixel-folder {
+            width: 48px;
+            height: 40px;
+            position: relative;
+        }
+        
+        .pixel-folder::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 4px;
+            width: 20px;
+            height: 8px;
+            background: #f0c040;
+            border: 2px solid #000;
+            border-bottom: none;
+            box-shadow: inset -2px 0 0 #d4a030;
+        }
+        
+        .pixel-folder::after {
+            content: '';
+            position: absolute;
+            top: 6px;
+            left: 0;
+            width: 48px;
+            height: 32px;
+            background: linear-gradient(180deg, #f8d860 0%, #e8c040 100%);
+            border: 2px solid #000;
+            box-shadow: 
+                inset 2px 2px 0 #fff8a0,
+                inset -2px -2px 0 #c89820;
+        }
+        
+        .folder-heart {
+            position: absolute;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 16px;
+            z-index: 1;
+            image-rendering: pixelated;
+            color: #ff1493;
+            text-shadow: 1px 1px 0 #000;
+        }
+        
+        .icon-label {
+            font-family: 'ChicagoFLF', 'VT323', monospace;
+            font-size: 10px;
+            text-align: center;
+            margin-top: 4px;
+            color: #fff;
+            text-shadow: 1px 1px 0 #000;
+            word-wrap: break-word;
+            max-width: 72px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Desktop Icons -->
+    <div class="desktop-icons">
+        <div class="desktop-icon" id="memoriesFolder">
+            <div class="pixel-folder">
+                <span class="folder-heart">♥</span>
+            </div>
+            <span class="icon-label">Memories ♥</span>
+        </div>
+    </div>
+    
+    <!-- About This Computer Window -->
+    <div class="about-window" id="aboutWindow">
+        <div class="title-bar" data-window="aboutWindow">
+            <div class="close-box" data-close="aboutWindow"></div>
+            <div class="title-bar-text">About This Computer</div>
+        </div>
+        <div class="about-content">
+            <div class="about-logo">
+                <img src="macos.png" class="macos-logo-large" alt="Mac OS">
+                <span>Mac OS 9</span>
+            </div>
+            <div class="about-specs">
+                <div class="about-specs-row">
+                    <span class="about-specs-label">Version:</span>
+                    <span>Mac OS 9.0.4</span>
+                </div>
+                <div class="about-specs-row">
+                    <span class="about-specs-label">Built-in Memory:</span>
+                    <span>512 MB</span>
+                </div>
+                <div class="about-specs-row">
+                    <span class="about-specs-label">Virtual Memory:</span>
+                    <span>Off</span>
+                </div>
+                <div class="about-specs-row">
+                    <span class="about-specs-label">Largest Unused Block:</span>
+                    <span>469.2 MB</span>
+                </div>
+                <div class="about-specs-row" style="margin-top: 10px; border: none;">
+                    <span>© Apple Computer, Inc. 1983-1999</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Classic Mac Menu Bar -->
+    <div class="menu-bar">
+        <img src="macos.png" class="macos-logo" alt="Apple">
+        <span>File</span>
+        <span>Edit</span>
+        <span>View</span>
+    </div>
+
+    <!-- Main Window -->
+    <div class="mac-window" id="paintWindow">
+        <div class="title-bar" data-window="paintWindow">
+            <div class="close-box" data-close="paintWindow"></div>
+            <div class="title-bar-text">Paint</div>
+        </div>
+        <div class="window-content paint-app">
+            <div class="paint-toolbar">
+                <div class="color-palette">
+                    <div class="color-swatch active" data-color="#000000" style="background: #000000;"></div>
+                    <div class="color-swatch" data-color="#ffffff" style="background: #ffffff; border: 1px solid #000;"></div>
+                    <div class="color-swatch" data-color="#ff0000" style="background: #ff0000;"></div>
+                    <div class="color-swatch" data-color="#ff69b4" style="background: #ff69b4;"></div>
+                    <div class="color-swatch" data-color="#ff1493" style="background: #ff1493;"></div>
+                    <div class="color-swatch" data-color="#ffd700" style="background: #ffd700;"></div>
+                    <div class="color-swatch" data-color="#00ff00" style="background: #00ff00;"></div>
+                    <div class="color-swatch" data-color="#0000ff" style="background: #0000ff;"></div>
+                    <div class="color-swatch" data-color="#800080" style="background: #800080;"></div>
+                    <div class="color-swatch" data-color="#8b4513" style="background: #8b4513;"></div>
+                </div>
+                <div class="paint-buttons">
+                    <button class="mac-button" id="clearBtn">Clear</button>
+                    <button class="mac-button primary" id="saveAsBtn"><img src="save-as.png" alt="Save As" style="height: 14px; vertical-align: middle; image-rendering: pixelated;"> Save As</button>
+                </div>
+            </div>
+            
+            <div class="canvas-container">
+                <canvas id="drawCanvas" width="600" height="300"></canvas>
+            </div>
+            
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p class="progress-text" id="progressText">Saving... 0%</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Click anywhere overlay -->
+    <div class="click-overlay" id="clickOverlay"></div>
+    
+    <!-- Success overlay -->
+    <div class="success-overlay" id="successOverlay">
+        <div class="popup-window" id="successWindow">
+            <div class="title-bar" data-window="successWindow">
+                <div class="close-box" id="closeSuccess"></div>
+                <div class="title-bar-text">Test Results</div>
+            </div>
+            <div class="popup-content" id="successContent">
+                <img src="happy.png" alt="Happy" class="result-image">
+                <div class="success-text">
+========================<br>
+TEST SUITE: Valentine.exe<br>
+========================<br>
+✓ test_love_exists......PASSED<br>
+✓ test_sammie_cute......PASSED<br>
+✓ test_heart_full.......PASSED<br>
+========================<br>
+All tests passed!<br>
+<br>
+Result: I love you sammie ♥
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- BSOD overlay -->
+    <div class="bsod-overlay" id="bsodOverlay">
+        <div class="bsod-content">
+            <div class="bsod-title">Windows</div>
+            <div class="bsod-text">
+A fatal exception 0E has occurred at 0028:C0011E36 in VXD VMM(01) +
+00010E36. The current application will be terminated.
+
+*  Press any key to terminate the current application.
+*  Press CTRL+ALT+DEL again to restart your computer. You will
+   lose any unsaved information in all applications.
+
+Error: LOVE_NOT_FOUND
+            </div>
+            <div class="bsod-prompt">Click anywhere to reboot_</div>
+        </div>
+    </div>
+    
+    <script>
+        // Window dragging functionality
+        let draggedWindow = null;
+        let dragOffsetX = 0;
+        let dragOffsetY = 0;
+        let highestZIndex = 2000;
+        
+        // Ensure About window starts on top
+        document.getElementById('aboutWindow').style.zIndex = highestZIndex;
+        
+        // Make all windows with title bars draggable
+        document.querySelectorAll('.title-bar[data-window]').forEach(titleBar => {
+            titleBar.addEventListener('mousedown', (e) => {
+                if (e.target.classList.contains('close-box')) return;
+                
+                const windowId = titleBar.dataset.window;
+                draggedWindow = document.getElementById(windowId);
+                
+                if (draggedWindow) {
+                    // Bring to front
+                    highestZIndex++;
+                    draggedWindow.style.zIndex = highestZIndex;
+                    
+                    // Calculate offset
+                    const rect = draggedWindow.getBoundingClientRect();
+                    dragOffsetX = e.clientX - rect.left;
+                    dragOffsetY = e.clientY - rect.top;
+                    
+                    // Remove transform and use absolute position
+                    draggedWindow.style.transform = 'none';
+                    draggedWindow.style.left = rect.left + 'px';
+                    draggedWindow.style.top = rect.top + 'px';
+                    draggedWindow.style.position = 'absolute';
+                }
+            });
+        });
+        
+        document.addEventListener('mousemove', (e) => {
+            if (draggedWindow) {
+                draggedWindow.style.left = (e.clientX - dragOffsetX) + 'px';
+                draggedWindow.style.top = (e.clientY - dragOffsetY) + 'px';
+            }
+        });
+        
+        document.addEventListener('mouseup', () => {
+            draggedWindow = null;
+        });
+        
+        // Close button handlers
+        document.querySelectorAll('.close-box[data-close]').forEach(closeBtn => {
+            closeBtn.addEventListener('click', () => {
+                const windowId = closeBtn.dataset.close;
+                const window = document.getElementById(windowId);
+                if (window) {
+                    window.classList.add('hidden');
+                }
+            });
+        });
+        
+        // Canvas setup
+        const canvas = document.getElementById('drawCanvas');
+        const ctx = canvas.getContext('2d');
+        let currentColor = '#000000';
+        
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+        
+        // Pixelated drawing style
+        ctx.imageSmoothingEnabled = false;
+        ctx.lineJoin = 'miter';
+        ctx.lineCap = 'square';
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = currentColor;
+        
+        // Color palette click handlers
+        document.querySelectorAll('.color-swatch').forEach(swatch => {
+            swatch.addEventListener('click', () => {
+                document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+                swatch.classList.add('active');
+                currentColor = swatch.dataset.color;
+                ctx.strokeStyle = currentColor;
+            });
+        });
+        
+        // Menu bar click handlers - return to start
+        document.querySelectorAll('.menu-bar span').forEach(menuItem => {
+            menuItem.addEventListener('click', () => {
+                // Reset the app
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                document.getElementById('clickOverlay').classList.remove('visible');
+                document.getElementById('successOverlay').classList.remove('visible');
+                document.getElementById('errorOverlay').classList.remove('visible');
+                document.getElementById('progressContainer').classList.remove('visible');
+            });
+        });
+        
+        // Drawing functions - pixelated (snap to grid)
+        function startDrawing(e) {
+            isDrawing = true;
+            [lastX, lastY] = getMousePos(e);
+        }
+        
+        function draw(e) {
+            if (!isDrawing) return;
+            
+            let [x, y] = getMousePos(e);
+            
+            // Snap to pixel grid for pixelated effect
+            x = Math.round(x / 2) * 2;
+            y = Math.round(y / 2) * 2;
+            const snapLastX = Math.round(lastX / 2) * 2;
+            const snapLastY = Math.round(lastY / 2) * 2;
+            
+            ctx.strokeStyle = currentColor;
+            ctx.beginPath();
+            ctx.moveTo(snapLastX, snapLastY);
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            
+            [lastX, lastY] = [x, y];
+        }
+        
+        function stopDrawing() {
+            isDrawing = false;
+        }
+        
+        function getMousePos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            
+            if (e.touches) {
+                return [
+                    (e.touches[0].clientX - rect.left) * scaleX,
+                    (e.touches[0].clientY - rect.top) * scaleY
+                ];
+            }
+            
+            return [
+                (e.clientX - rect.left) * scaleX,
+                (e.clientY - rect.top) * scaleY
+            ];
+        }
+        
+        // Event listeners for drawing
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseout', stopDrawing);
+        
+        // Touch support
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            startDrawing(e);
+        });
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            draw(e);
+        });
+        canvas.addEventListener('touchend', stopDrawing);
+        
+        // Clear button
+        document.getElementById('clearBtn').addEventListener('click', () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        });
+        
+        // Save As button - pixel sorting animation
+        document.getElementById('saveAsBtn').addEventListener('click', startMagic);
+        
+        async function startMagic() {
+            const progressContainer = document.getElementById('progressContainer');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            
+            progressContainer.classList.add('visible');
+            
+            // Get drawn pixels
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const pixels = [];
+            
+            for (let y = 0; y < canvas.height; y++) {
+                for (let x = 0; x < canvas.width; x++) {
+                    const i = (y * canvas.width + x) * 4;
+                    if (imageData.data[i + 3] > 50) { // If pixel has some opacity
+                        pixels.push({
+                            x: x,
+                            y: y,
+                            r: imageData.data[i],
+                            g: imageData.data[i + 1],
+                            b: imageData.data[i + 2],
+                            a: imageData.data[i + 3]
+                        });
+                    }
+                }
+            }
+            
+            // If no pixels drawn, add some default ones
+            if (pixels.length < 100) {
+                for (let i = 0; i < 500; i++) {
+                    pixels.push({
+                        x: Math.random() * canvas.width,
+                        y: Math.random() * canvas.height,
+                        r: 0,
+                        g: 0,
+                        b: 0,
+                        a: 255
+                    });
+                }
+            }
+            
+            // Generate target text pixels
+            const targetPixels = generateTextPixels("Will You Be My Valentine?");
+            
+            // Match pixels to targets
+            const matches = matchPixelsToTargets(pixels, targetPixels);
+            
+            // Animate!
+            const duration = 2500;
+            const startTime = Date.now();
+            
+            function animate() {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                // Easing function
+                const eased = easeInOutCubic(progress);
+                
+                // Update progress bar
+                progressFill.style.width = (progress * 100) + '%';
+                progressText.textContent = `Saving... ${Math.floor(progress * 100)}%`;
+                
+                // Clear canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw pixels at interpolated positions
+                matches.forEach(match => {
+                    const currentX = match.startX + (match.endX - match.startX) * eased;
+                    const currentY = match.startY + (match.endY - match.startY) * eased;
+                    
+                    // Add some sparkle effect during animation
+                    const sparkleOffset = progress < 1 ? Math.sin(elapsed * 0.01 + match.startX) * 2 : 0;
+                    
+                    ctx.fillStyle = `rgba(${match.r}, ${match.g}, ${match.b}, ${match.a / 255})`;
+                    ctx.fillRect(
+                        Math.round(currentX + sparkleOffset), 
+                        Math.round(currentY + sparkleOffset), 
+                        2, 2
+                    );
+                });
+                
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    // Animation complete!
+                    progressText.textContent = '';
+                    setTimeout(() => {
+                        progressContainer.classList.remove('visible');
+                        document.getElementById('clickOverlay').classList.add('visible');
+                    }, 300);
+                }
+            }
+            
+            animate();
+        }
+        
+        function generateTextPixels(text) {
+            // Create off-screen canvas for the window shape
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            const tempCtx = tempCanvas.getContext('2d');
+            
+            // Clear with transparent background
+            tempCtx.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
+            
+            // Draw a Mac-style window - LARGER
+            const windowWidth = 420;
+            const windowHeight = 220;
+            const windowX = (canvas.width - windowWidth) / 2;
+            const windowY = (canvas.height - windowHeight) / 2;
+            
+            // Only draw the outlines/strokes - NOT filled background
+            tempCtx.strokeStyle = '#000';
+            tempCtx.fillStyle = '#000';
+            
+            // Window border
+            tempCtx.lineWidth = 3;
+            tempCtx.strokeRect(windowX, windowY, windowWidth, windowHeight);
+            
+            // Title bar stripes
+            tempCtx.lineWidth = 1;
+            for (let i = 0; i < 6; i++) {
+                tempCtx.beginPath();
+                tempCtx.moveTo(windowX + 25, windowY + 4 + i * 3);
+                tempCtx.lineTo(windowX + 120, windowY + 4 + i * 3);
+                tempCtx.stroke();
+                tempCtx.beginPath();
+                tempCtx.moveTo(windowX + windowWidth - 120, windowY + 4 + i * 3);
+                tempCtx.lineTo(windowX + windowWidth - 25, windowY + 4 + i * 3);
+                tempCtx.stroke();
+            }
+            
+            // Title bar bottom border
+            tempCtx.lineWidth = 2;
+            tempCtx.beginPath();
+            tempCtx.moveTo(windowX, windowY + 22);
+            tempCtx.lineTo(windowX + windowWidth, windowY + 22);
+            tempCtx.stroke();
+            
+            // Close box
+            tempCtx.lineWidth = 2;
+            tempCtx.strokeRect(windowX + 8, windowY + 6, 12, 12);
+            
+            // Heart icon - larger
+            tempCtx.font = 'bold 40px Geneva, Helvetica, Arial, sans-serif';
+            tempCtx.textAlign = 'center';
+            tempCtx.textBaseline = 'middle';
+            tempCtx.fillText('♥', windowX + windowWidth / 2, windowY + 65);
+            
+            // Question text - larger
+            tempCtx.font = 'bold 22px Geneva, Helvetica, Arial, sans-serif';
+            tempCtx.fillText('Will You Be', windowX + windowWidth / 2, windowY + 105);
+            tempCtx.fillText('My Valentine?', windowX + windowWidth / 2, windowY + 135);
+            
+            // Yes button (left) - primary style with thick border
+            tempCtx.lineWidth = 4;
+            tempCtx.strokeRect(windowX + windowWidth / 2 - 130, windowY + 165, 100, 35);
+            tempCtx.font = 'bold 18px Geneva, Helvetica, Arial, sans-serif';
+            tempCtx.fillText('Yes!', windowX + windowWidth / 2 - 80, windowY + 183);
+            
+            // No button (right) - thinner
+            tempCtx.lineWidth = 2;
+            tempCtx.strokeRect(windowX + windowWidth / 2 + 30, windowY + 165, 100, 35);
+            tempCtx.font = '16px Geneva, Helvetica, Arial, sans-serif';
+            tempCtx.fillText('no', windowX + windowWidth / 2 + 80, windowY + 183);
+            
+            // Extract pixel positions - only black pixels (not transparent background)
+            const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+            const pixels = [];
+            
+            // Sample pixels (every 2nd pixel for better readability)
+            for (let y = 0; y < tempCanvas.height; y += 2) {
+                for (let x = 0; x < tempCanvas.width; x += 2) {
+                    const i = (y * tempCanvas.width + x) * 4;
+                    // Only include pixels that are actually drawn (have alpha > 50)
+                    if (imageData.data[i + 3] > 50) {
+                        pixels.push({ x, y });
+                    }
+                }
+            }
+            
+            return pixels;
+        }
+        
+        function matchPixelsToTargets(sourcePixels, targetPixels) {
+            const matches = [];
+            const usedTargets = new Set();
+            
+            // Ensure we have enough pixels
+            while (sourcePixels.length < targetPixels.length) {
+                const randomSource = sourcePixels[Math.floor(Math.random() * sourcePixels.length)];
+                sourcePixels.push({...randomSource});
+            }
+            
+            // Shuffle source pixels for randomness
+            sourcePixels.sort(() => Math.random() - 0.5);
+            
+            // Match each target with nearest available source
+            targetPixels.forEach((target, index) => {
+                if (index < sourcePixels.length) {
+                    const source = sourcePixels[index];
+                    matches.push({
+                        startX: source.x,
+                        startY: source.y,
+                        endX: target.x,
+                        endY: target.y,
+                        r: source.r || 0,
+                        g: source.g || 0,
+                        b: source.b || 0,
+                        a: source.a || 255
+                    });
+                }
+            });
+            
+            // Add extra particles that fly off screen
+            for (let i = targetPixels.length; i < sourcePixels.length; i++) {
+                const source = sourcePixels[i];
+                matches.push({
+                    startX: source.x,
+                    startY: source.y,
+                    endX: Math.random() * canvas.width,
+                    endY: Math.random() < 0.5 ? -50 : canvas.height + 50,
+                    r: source.r || 0,
+                    g: source.g || 0,
+                    b: source.b || 0,
+                    a: source.a || 255
+                });
+            }
+            
+            return matches;
+        }
+        
+        function easeInOutCubic(t) {
+            return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        }
+        
+        // Click overlay handler - detect which button was clicked
+        document.getElementById('clickOverlay').addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const clickY = e.clientY - rect.top;
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const canvasX = clickX * scaleX;
+            const canvasY = clickY * scaleY;
+            
+            // Button positions (must match generateTextPixels)
+            const windowWidth = 420;
+            const windowHeight = 220;
+            const windowX = (canvas.width - windowWidth) / 2;
+            const windowY = (canvas.height - windowHeight) / 2;
+            
+            // Yes button bounds
+            const yesBtnX = windowX + windowWidth / 2 - 130;
+            const yesBtnY = windowY + 165;
+            const btnWidth = 100;
+            const btnHeight = 35;
+            
+            // No button bounds
+            const noBtnX = windowX + windowWidth / 2 + 30;
+            const noBtnY = windowY + 165;
+            
+            if (canvasX >= yesBtnX && canvasX <= yesBtnX + btnWidth &&
+                canvasY >= yesBtnY && canvasY <= yesBtnY + btnHeight) {
+                // Yes clicked!
+                document.getElementById('clickOverlay').classList.remove('visible');
+                showSuccess();
+            } else if (canvasX >= noBtnX && canvasX <= noBtnX + btnWidth &&
+                       canvasY >= noBtnY && canvasY <= noBtnY + btnHeight) {
+                // No clicked - show dead image
+                showError();
+            }
+        });
+        
+        // Classic Mac error sound (base64 encoded beep)
+        function playErrorSound() {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            
+            // Create a classic Mac-style "sosumi" beep
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
+            oscillator.frequency.setValueAtTime(440, audioCtx.currentTime + 0.1);
+            
+            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            
+            oscillator.start(audioCtx.currentTime);
+            oscillator.stop(audioCtx.currentTime + 0.3);
+        }
+        
+        function showError() {
+            playErrorSound();
+            document.getElementById('bsodOverlay').classList.add('visible');
+        }
+        
+        function showSuccess() {
+            const overlay = document.getElementById('successOverlay');
+            const content = document.getElementById('successContent');
+            overlay.classList.add('visible');
+            
+            // Create falling heart.png images
+            function createFallingHeart() {
+                const heart = document.createElement('img');
+                heart.className = 'falling-heart';
+                heart.src = 'heart.png';
+                heart.style.left = Math.random() * 100 + '%';
+                heart.style.animationDuration = (2 + Math.random() * 3) + 's';
+                const size = 16 + Math.random() * 24;
+                heart.style.width = size + 'px';
+                heart.style.height = size + 'px';
+                document.body.appendChild(heart);
+                
+                // Remove after animation
+                setTimeout(() => heart.remove(), 5000);
+            }
+            
+            // Create hearts continuously
+            for (let i = 0; i < 15; i++) {
+                setTimeout(() => createFallingHeart(), i * 150);
+            }
+            
+            // Keep creating hearts
+            const heartInterval = setInterval(() => {
+                if (overlay.classList.contains('visible')) {
+                    createFallingHeart();
+                } else {
+                    clearInterval(heartInterval);
+                }
+            }, 250);
+        }
+        
+        // Close button handlers
+        document.getElementById('closeSuccess').addEventListener('click', () => {
+            document.getElementById('successOverlay').classList.remove('visible');
+        });
+        
+        // BSOD click anywhere to reboot
+        document.getElementById('bsodOverlay').addEventListener('click', () => {
+            // Reset the app
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            document.getElementById('clickOverlay').classList.remove('visible');
+            document.getElementById('successOverlay').classList.remove('visible');
+            document.getElementById('bsodOverlay').classList.remove('visible');
+            document.getElementById('progressContainer').classList.remove('visible');
+            // Make sure paint window is visible
+            document.getElementById('paintWindow').style.display = 'block';
+        });
+        
+        // Sparkle effect on mouse move
+        document.addEventListener('mousemove', (e) => {
+            if (Math.random() > 0.96) {
+                const sparkle = document.createElement('div');
+                sparkle.className = 'sparkle';
+                sparkle.textContent = ['✦', '♥', '★', '•'][Math.floor(Math.random() * 4)];
+                sparkle.style.left = e.clientX + 'px';
+                sparkle.style.top = e.clientY + 'px';
+                sparkle.style.color = '#ff69b4';
+                document.body.appendChild(sparkle);
+                
+                setTimeout(() => sparkle.remove(), 800);
+            }
+        });
+    </script>
+</body>
+</html>
